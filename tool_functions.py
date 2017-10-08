@@ -270,6 +270,8 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
     # Return the list of windows
     return window_list
 
+# # lecture 32. sliding window implementation.
+# # https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/2b62a1c3-e151-4a0e-b6b6-e424fa46ceab/lessons/fd66c083-4ccb-4fe3-bda1-c29db76f50a0/concepts/8e39c07e-afd5-4ba5-9204-8b44aa39285c
 # Define a function to draw bounding boxes
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
     # Make a copy of the image
@@ -313,6 +315,8 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                        visualise=vis, feature_vector=feature_vec)
         return features
 
+# # # the code in 28. Color Classify
+# # # https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/2b62a1c3-e151-4a0e-b6b6-e424fa46ceab/lessons/fd66c083-4ccb-4fe3-bda1-c29db76f50a0/concepts/be308636-742b-416a-8fcc-c6071865a11f
 def bin_spatial(img, size=(32, 32)):
     color1 = cv2.resize(img[:,:,0], size).ravel()
     color2 = cv2.resize(img[:,:,1], size).ravel()
@@ -329,5 +333,267 @@ def color_hist(img, nbins=32):    #bins_range=(0, 256)
     # Return the individual histograms, bin_centers and feature vector
     return hist_features
 
+
+
+
+def train_classifier():
+    start_time = time.time()
+    # todo: remove this!!!!!!!
+    debug = 1
+    # Read in car and non-car images
+    cars = []
+    notcars = []
+    car_images = glob.glob('training_set/vehicles/GTI_MiddleClose/*.png')
+    for image in car_images:
+        cars.append(image)
+    if 0 == debug:
+        car_images = glob.glob('training_set/vehicles/GTI_Right/*.png')
+        for image in car_images:
+            cars.append(image)
+        car_images = glob.glob('training_set/vehicles/GTI_Left/*.png')
+        for image in car_images:
+            cars.append(image)
+        car_images = glob.glob('training_set/vehicles/GTI_Far/*.png')
+        for image in car_images:
+            cars.append(image)
+    #     car_images = glob.glob('training_set/vehicles/KITTI_extracted/*.png')
+    #     for image in car_images:
+    #         cars.append(image)
+
+    notcar_images = glob.glob('training_set/non-vehicles/GTI/*.png')
+    for image in notcar_images:
+        notcars.append(image)
+    # if 0 == debug:
+    #     notcar_images = glob.glob('training_set/non-vehicles/Extras/*.png')
+    #     for image in notcar_images:
+    #         notcars.append(image)
+
+
+    # todo: remove this!!!!!!!
+    # Reduce the sample size because
+    # The quiz evaluator times out after 13s of CPU time
+    # if 1 == debug:
+    sample_size = 400
+    cars = cars[0:sample_size]
+    notcars = notcars[0:sample_size]
+
+    print('cars size : ', len(cars))
+    print('notcars size : ', len(notcars))
+
+    elapsed_time = time.time() - start_time
+    print('elapsed_time : ', elapsed_time )
+
+
+    car_features = extract_features(cars, color_space=color_space,
+                            spatial_size=spatial_size, hist_bins=hist_bins,
+                            orient=orient, pix_per_cell=pix_per_cell,
+                            cell_per_block=cell_per_block,
+                            hog_channel=hog_channel
+    #                                , spatial_feat=spatial_feat, hist_feat=hist_feat, hog_feat=hog_feat
+                                   )
+
+    notcar_features = extract_features(notcars, color_space=color_space,
+                            spatial_size=spatial_size, hist_bins=hist_bins,
+                            orient=orient, pix_per_cell=pix_per_cell,
+                            cell_per_block=cell_per_block,
+                            hog_channel=hog_channel
+    #                                   , spatial_feat=spatial_feat, hist_feat=hist_feat, hog_feat=hog_feat
+                                      )
+    print('car_features shape:, ', len(car_features) )
+
+    X = np.vstack((car_features, notcar_features)).astype(np.float64)
+    # Fit a per-column scaler
+    global X_scaler
+    X_scaler = StandardScaler().fit(X)
+    # Apply the scaler to X
+    scaled_X = X_scaler.transform(X)
+
+    print('X:, ', X.shape, ' X_scaler: ', X_scaler)
+
+    # Define the labels vector
+    y = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
+
+
+    # Split up data into randomized training and test sets
+    rand_state = np.random.randint(0, 100)
+    X_train, X_test, y_train, y_test = train_test_split(
+        scaled_X, y, test_size=0.2, random_state=rand_state)
+
+    print('Using:',orient,'orientations',pix_per_cell,
+        'pixels per cell and', cell_per_block,'cells per block')
+    print('Feature vector length:', len(X_train[0]))
+    # Use a linear SVC
+    svc = LinearSVC()
+    # Check the training time for the SVC
+    t=time.time()
+    svc.fit(X_train, y_train)
+    t2 = time.time()
+    print(round(t2-t, 2), 'Seconds to train SVC...')
+    # Check the score of the SVC
+    print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
+    # Check the prediction time for a single sample
+    t=time.time()
+
+    with open('save/clf.pickle', 'wb') as f:
+        pickle.dump(svc, f)
+    with open('save/x_scaler.pickle', 'wb') as f:
+        pickle.dump(X_scaler, f)
+
+    elapsed_time = time.time() - start_time
+    print('elapsed_time : ', elapsed_time )
+
+    return svc
+
+
+# example code from lecture 35. Hog Sub-sampling window search:
+# https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/2b62a1c3-e151-4a0e-b6b6-e424fa46ceab/lessons/fd66c083-4ccb-4fe3-bda1-c29db76f50a0/concepts/c3e815c7-1794-4854-8842-5d7b96276642
+
+# Define a single function that can extract features using hog sub-sampling and make predictions
+def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
+              pix_per_cell, cell_per_block, spatial_size, hist_bins):
+
+    # array of rectangles where cars were detected
+    rectangles = []
+    draw_img = np.copy(img)
+    img = img.astype(np.float32)/255
+
+    img_tosearch = img[ystart:ystop,:,:]
+    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2YCrCb')
+    if scale != 1:
+        imshape = ctrans_tosearch.shape
+        ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1]/scale), np.int(imshape[0]/scale)))
+
+    ch1 = ctrans_tosearch[:,:,0]
+    ch2 = ctrans_tosearch[:,:,1]
+    ch3 = ctrans_tosearch[:,:,2]
+
+    # Define blocks and steps as above
+    nxblocks = (ch1.shape[1] // pix_per_cell) - cell_per_block + 1
+    nyblocks = (ch1.shape[0] // pix_per_cell) - cell_per_block + 1
+    nfeat_per_block = orient*cell_per_block**2
+
+    # 64 was the orginal sampling rate, with 8 cells and 8 pix per cell
+# todo: window, cells_per_step, should not be hard coded?
+# should edit code refer to this discussion:
+# https://discussions.udacity.com/t/hog-sub-sampling-window-search/235413/30?u=sun.pochin
+    window = 64
+    nblocks_per_window = (window // pix_per_cell) - cell_per_block + 1
+    cells_per_step = 2  # Instead of overlap, define how many cells to step
+    nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
+    nysteps = (nyblocks - nblocks_per_window) // cells_per_step
+
+    # Compute individual channel HOG features for the entire image
+    hog1 = get_hog_features(ch1, orient, pix_per_cell, cell_per_block, feature_vec=False)
+    hog2 = get_hog_features(ch2, orient, pix_per_cell, cell_per_block, feature_vec=False)
+    hog3 = get_hog_features(ch3, orient, pix_per_cell, cell_per_block, feature_vec=False)
+
+    for xb in range(nxsteps):
+        for yb in range(nysteps):
+            ypos = yb*cells_per_step
+            xpos = xb*cells_per_step
+            # Extract HOG for this patch
+            hog_feat1 = hog1[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel()
+            hog_feat2 = hog2[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel()
+            hog_feat3 = hog3[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel()
+            hog_features = np.hstack((hog_feat1, hog_feat2, hog_feat3))
+
+            xleft = xpos*pix_per_cell
+            ytop = ypos*pix_per_cell
+
+            # Extract the image patch
+            subimg = cv2.resize(ctrans_tosearch[ytop:ytop+window, xleft:xleft+window], (64,64))
+
+            # Get color features
+            spatial_features = bin_spatial(subimg, size=spatial_size)
+            hist_features = color_hist(subimg, nbins=hist_bins)
+
+            # Scale features and make a prediction
+            test_features = X_scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))
+            #test_features = X_scaler.transform(np.hstack((shape_feat, hist_feat)).reshape(1, -1))
+            test_prediction = svc.predict(test_features)
+
+            if test_prediction == 1:
+                xbox_left = np.int(xleft*scale)
+                ytop_draw = np.int(ytop*scale)
+                win_draw = np.int(window*scale)
+                cv2.rectangle(draw_img,(xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart),(0,0,255),6)
+                rectangles.append(((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart)))
+
+    return draw_img, rectangles
+
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+import numpy as np
+import cv2
+from scipy.ndimage.measurements import label
+
+def add_heat(heatmap, bbox_list, debug = False):
+    if debug:
+        print('bbox_list len: ', len(bbox_list) )
+    # Iterate through list of bboxes
+    for box in bbox_list:
+        # Add += 1 for all pixels inside each bbox
+        # Assuming each "box" takes the form ((x1, y1), (x2, y2))
+        heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
+
+    # Return updated heatmap
+    return heatmap
+
+
+def apply_threshold(heatmap, threshold):
+    # Zero out pixels below the threshold
+    heatmap[heatmap <= threshold] = 0
+    # Return thresholded map
+    return heatmap
+
+
+def draw_labeled_bboxes(img, labels):
+    # Iterate through all detected cars
+    for car_number in range(1, labels[1]+1):
+        # Find pixels with each car_number label value
+        nonzero = (labels[0] == car_number).nonzero()
+        # Identify x and y values of those pixels
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
+        # Define a bounding box based on min/max x and y
+        bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
+        # Draw the box on the image
+        cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+    # Return the image
+    return img
+
+
+def makeheatmap(img, rect, heatmap_threshold, debug = False):
+    heat = np.zeros_like(img[:,:,0]).astype(np.float)
+    heat = add_heat(heat, rect, debug)
+
+    heat = apply_threshold(heat, heatmap_threshold)
+    labels = label(heat)
+    if debug:
+        print(labels[1], 'cars found')
+#         print('labels: ', labels[0])
+#         plt.imshow(labels[0], cmap='gray')
+
+    # Visualize the heatmap when displaying
+    heatmap = np.clip(heat, 0, 255)
+
+    # Draw bounding boxes on a copy of the image
+    draw_img = draw_labeled_bboxes(np.copy(img), labels)
+
+    if debug:
+        # Display the image
+#         plt.imshow(draw_img)
+
+        fig = plt.figure()
+        plt.subplot(121)
+        plt.imshow(draw_img)
+        plt.title('Car Positions')
+        plt.subplot(122)
+        plt.imshow(heatmap, cmap='hot')
+        plt.title('Heat Map')
+        fig.tight_layout()
+        plt.show()
+
+    return draw_img
 
 print('cell passed.')
