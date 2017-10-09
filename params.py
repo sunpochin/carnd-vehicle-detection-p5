@@ -22,4 +22,4 @@ spatial_feat = True # Spatial features on or off
 hist_feat = True # Histogram features on or off
 hog_feat = True # HOG features on or off
 y_start_stop = [None, None] # Min and max in y to search in slide_window()
-sample_size = 4000
+sample_size = 10000

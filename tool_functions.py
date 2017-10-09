@@ -23,6 +23,8 @@ from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 import pickle
 import time
+from scipy.ndimage.measurements import label
+
 # start_time = time.time()
 
 # NOTE: the next import is only valid for scikit-learn version <= 0.17
@@ -52,6 +54,7 @@ y_start_stop = params.y_start_stop # Min and max in y to search in slide_window(
 
 # sample_size = 4000
 sample_size = params.sample_size
+#sample_size = 10000
 
 
 # Define a function to extract features from a single image window
@@ -467,10 +470,9 @@ def train_classifier():
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
-              pix_per_cell, cell_per_block, spatial_size, hist_bins):
+              pix_per_cell, cell_per_block, spatial_size, hist_bins, sample_window_cnt):
 
 #    print('in find_cars :', 'ystart: ', ystart, 'spatial_size: ', spatial_size)
-
     # array of rectangles where cars were detected
     rectangles = []
     draw_img = np.copy(img)
@@ -481,8 +483,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
     img = img.astype(np.float32)/255
 
     img_tosearch = img[ystart:ystop,:,:]
-#    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2YCrCb')
-    ctrans_tosearch = convert_color(img_tosearch, convto=color_space)
+    ctrans_tosearch = convert_color(img_tosearch, convto = color_space)
     if scale != 1:
         imshape = ctrans_tosearch.shape
         ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1]/scale), np.int(imshape[0]/scale)))
@@ -497,15 +498,16 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
     nfeat_per_block = orient*cell_per_block**2
 
     # 64 was the orginal sampling rate, with 8 cells and 8 pix per cell
-# todo: window, cells_per_step, should not be hard coded?
-# should edit code refer to this discussion:
-# https://discussions.udacity.com/t/hog-sub-sampling-window-search/235413/30?u=sun.pochin
-    window = 64
-    nblocks_per_window = (window // pix_per_cell) - cell_per_block + 1
+    # todo: window, cells_per_step, should not be hard coded?
+    # should edit code refer to this discussion:
+    # https://discussions.udacity.com/t/hog-sub-sampling-window-search/235413/30?u=sun.pochin
+# #    sample_window_cnt = 64
+#     sample_window_cnt = 128
+    nblocks_per_window = (sample_window_cnt // pix_per_cell) - cell_per_block + 1
     cells_per_step = 2  # Instead of overlap, define how many cells to step
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step
-
+    print('nblocks_per_window : ', nblocks_per_window, ' nxsteps : ', nxsteps, ' nysteps : ', nysteps)
     # Compute individual channel HOG features for the entire image
     hog1 = get_hog_features(ch1, orient, pix_per_cell, cell_per_block, feature_vec=False)
     hog2 = get_hog_features(ch2, orient, pix_per_cell, cell_per_block, feature_vec=False)
@@ -525,7 +527,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
             ytop = ypos*pix_per_cell
 
             # Extract the image patch
-            subimg = cv2.resize(ctrans_tosearch[ytop:ytop+window, xleft:xleft+window], (64,64))
+            subimg = cv2.resize(ctrans_tosearch[ytop:ytop + sample_window_cnt, xleft:xleft + sample_window_cnt], (64,64))
 
             # Get color features
             spatial_features = bin_spatial(subimg, size=spatial_size)
@@ -539,17 +541,13 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
             if test_prediction == 1:
                 xbox_left = np.int(xleft*scale)
                 ytop_draw = np.int(ytop*scale)
-                win_draw = np.int(window*scale)
+                win_draw = np.int(sample_window_cnt*scale)
+                print(' xbox_left : ', xbox_left, ' ytop_draw : ', ytop_draw, ' win_draw : ', win_draw)
                 cv2.rectangle(draw_img,(xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart),(0,0,255),6)
                 rectangles.append(((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart)))
 
     return draw_img, rectangles
 
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
-import numpy as np
-import cv2
-from scipy.ndimage.measurements import label
 
 def add_heat(heatmap, bbox_list, debug = False):
     if debug:
@@ -607,7 +605,6 @@ def makeheatmap(img, rect, heatmap_threshold, debug = False):
     if debug:
         # Display the image
 #         plt.imshow(draw_img)
-
         fig = plt.figure()
         plt.subplot(121)
         plt.imshow(draw_img)
@@ -619,5 +616,3 @@ def makeheatmap(img, rect, heatmap_threshold, debug = False):
         plt.show()
 
     return draw_img
-
-print('cell passed.')
