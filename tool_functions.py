@@ -50,7 +50,7 @@ hist_feat = params.hist_feat # Histogram features on or off
 hog_feat = params.hog_feat # HOG features on or off
 y_start_stop = params.y_start_stop # Min and max in y to search in slide_window()
 
-sample_size = 4000
+sample_size = 10000
 
 
 # Define a function to extract features from a single image window
@@ -316,13 +316,16 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
 
 
 
-def convert_color(img, conv='RGB2YCrCb'):
-    if conv == 'RGB2YCrCb':
+# def convert_color(img, conv='RGB2YCrCb'):
+def convert_color(img, convto='YCrCb'):
+    if conv == 'YCrCb':
         return cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
-    if conv == 'BGR2YCrCb':
-        return cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-    if conv == 'RGB2LUV':
+    if conv == 'LUV':
         return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
+    # if conv == 'BGR2YCrCb':
+    #     return cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+    # if conv == 'RGB2LUV':
+    #     return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
 
 def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                         vis=False, feature_vec=True):
@@ -475,7 +478,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
     img = img.astype(np.float32)/255
 
     img_tosearch = img[ystart:ystop,:,:]
-    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2YCrCb')
+    ctrans_tosearch = convert_color(img_tosearch, convto = color_space)
     if scale != 1:
         imshape = ctrans_tosearch.shape
         ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1]/scale), np.int(imshape[0]/scale)))
