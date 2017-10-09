@@ -21,3 +21,6 @@ spatial_feat = True # Spatial features on or off
 hist_feat = True # Histogram features on or off
 hog_feat = True # HOG features on or off
 y_start_stop = [None, None] # Min and max in y to search in slide_window()
+
+xy_window=(64, 64)
+xy_overlap=(0.75, 0.75)
