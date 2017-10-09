@@ -2,25 +2,42 @@ import matplotlib.image as mpimg
 import numpy as np
 import cv2
 from skimage.feature import hog
-
-
-import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-import numpy as np
-import cv2
 import glob
 import time
 from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
+import pickle
+import time
+# start_time = time.time()
 
 # NOTE: the next import is only valid for scikit-learn version <= 0.17
 # for scikit-learn >= 0.18 use:
 # from sklearn.model_selection import train_test_split
 from sklearn.cross_validation import train_test_split
 
-import time
-start_time = time.time()
+import params
+### TODO: Tweak these parameters and see how the results change.
+#color_space = 'RGB' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+#color_space = 'HSV'
+color_space = params.color_space
+# HOG orientations
+orient = params.orient
+#pix_per_cell = 8 # HOG pixels per cell
+# making it 4 to have more rect in find_cars
+# HOG pixels per cell
+pix_per_cell = params.pix_per_cell
+cell_per_block = params.cell_per_block # HOG cells per block
+hog_channel = params.hog_channel # Can be 0, 1, 2, or "ALL"
+spatial_size = params.spatial_size # Spatial binning dimensions
+hist_bins = params.hist_bins    # Number of histogram bins
+spatial_feat = params.spatial_feat # Spatial features on or off
+hist_feat = params.hist_feat # Histogram features on or off
+hog_feat = params.hog_feat # HOG features on or off
+y_start_stop = params.y_start_stop # Min and max in y to search in slide_window()
+
+
 # Define a function to extract features from a single image window
 # This function is very similar to extract_features()
 # just for a single image rather than list of images
@@ -111,10 +128,6 @@ def search_windows(img, windows, clf, scaler, color_space='RGB',
     return on_windows
 
 
-import matplotlib.image as mpimg
-import numpy as np
-import cv2
-from skimage.feature import hog
 # Define a function to return HOG features and visualization
 def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                         vis=False, feature_vec=True):
@@ -135,13 +148,8 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                        visualise=vis, feature_vector=feature_vec)
         return features
 
-# Define a function to compute binned color features
-# def bin_spatial(img, size=(32, 32)):
-#     # Use cv2.resize().ravel() to create the feature vector
-#     features = cv2.resize(img, size).ravel()
-#     # Return the feature vector
-#     return features
-
+# # # the code in 28. Color Classify
+# # # https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/2b62a1c3-e151-4a0e-b6b6-e424fa46ceab/lessons/fd66c083-4ccb-4fe3-bda1-c29db76f50a0/concepts/be308636-742b-416a-8fcc-c6071865a11f
 # Define a function to compute binned color features
 def bin_spatial(img, size=(32, 32)):
     color1 = cv2.resize(img[:,:,0], size).ravel()
@@ -274,6 +282,14 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
 # # https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/2b62a1c3-e151-4a0e-b6b6-e424fa46ceab/lessons/fd66c083-4ccb-4fe3-bda1-c29db76f50a0/concepts/8e39c07e-afd5-4ba5-9204-8b44aa39285c
 # Define a function to draw bounding boxes
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
+    import params
+    print('in draw_boxes' )
+    ### TODO: Tweak these parameters and see how the results change.
+    # HOG orientations
+    orient = params.orient
+    print('type params :', type(params), 'params :', params)
+    print('orient :', orient)
+
     # Make a copy of the image
     imcopy = np.copy(img)
     # Iterate through the bounding boxes
@@ -317,29 +333,26 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
 
 # # # the code in 28. Color Classify
 # # # https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/2b62a1c3-e151-4a0e-b6b6-e424fa46ceab/lessons/fd66c083-4ccb-4fe3-bda1-c29db76f50a0/concepts/be308636-742b-416a-8fcc-c6071865a11f
-def bin_spatial(img, size=(32, 32)):
-    color1 = cv2.resize(img[:,:,0], size).ravel()
-    color2 = cv2.resize(img[:,:,1], size).ravel()
-    color3 = cv2.resize(img[:,:,2], size).ravel()
-    return np.hstack((color1, color2, color3))
-
-def color_hist(img, nbins=32):    #bins_range=(0, 256)
-    # Compute the histogram of the color channels separately
-    channel1_hist = np.histogram(img[:,:,0], bins=nbins)
-    channel2_hist = np.histogram(img[:,:,1], bins=nbins)
-    channel3_hist = np.histogram(img[:,:,2], bins=nbins)
-    # Concatenate the histograms into a single feature vector
-    hist_features = np.concatenate((channel1_hist[0], channel2_hist[0], channel3_hist[0]))
-    # Return the individual histograms, bin_centers and feature vector
-    return hist_features
-
-
-
+# def bin_spatial(img, size=(32, 32)):
+#     color1 = cv2.resize(img[:,:,0], size).ravel()
+#     color2 = cv2.resize(img[:,:,1], size).ravel()
+#     color3 = cv2.resize(img[:,:,2], size).ravel()
+#     return np.hstack((color1, color2, color3))
+#
+# def color_hist(img, nbins=32):    #bins_range=(0, 256)
+#     # Compute the histogram of the color channels separately
+#     channel1_hist = np.histogram(img[:,:,0], bins=nbins)
+#     channel2_hist = np.histogram(img[:,:,1], bins=nbins)
+#     channel3_hist = np.histogram(img[:,:,2], bins=nbins)
+#     # Concatenate the histograms into a single feature vector
+#     hist_features = np.concatenate((channel1_hist[0], channel2_hist[0], channel3_hist[0]))
+#     # Return the individual histograms, bin_centers and feature vector
+#     return hist_features
 
 def train_classifier():
     start_time = time.time()
     # todo: remove this!!!!!!!
-    debug = 1
+    debug = 0
     # Read in car and non-car images
     cars = []
     notcars = []
@@ -356,24 +369,24 @@ def train_classifier():
         car_images = glob.glob('training_set/vehicles/GTI_Far/*.png')
         for image in car_images:
             cars.append(image)
-    #     car_images = glob.glob('training_set/vehicles/KITTI_extracted/*.png')
-    #     for image in car_images:
-    #         cars.append(image)
+        car_images = glob.glob('training_set/vehicles/KITTI_extracted/*.png')
+        for image in car_images:
+            cars.append(image)
 
     notcar_images = glob.glob('training_set/non-vehicles/GTI/*.png')
     for image in notcar_images:
         notcars.append(image)
-    # if 0 == debug:
-    #     notcar_images = glob.glob('training_set/non-vehicles/Extras/*.png')
-    #     for image in notcar_images:
-    #         notcars.append(image)
+    if 0 == debug:
+        notcar_images = glob.glob('training_set/non-vehicles/Extras/*.png')
+        for image in notcar_images:
+            notcars.append(image)
 
 
     # todo: remove this!!!!!!!
     # Reduce the sample size because
     # The quiz evaluator times out after 13s of CPU time
     # if 1 == debug:
-    sample_size = 400
+    sample_size = 2000
     cars = cars[0:sample_size]
     notcars = notcars[0:sample_size]
 
@@ -452,9 +465,15 @@ def train_classifier():
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
               pix_per_cell, cell_per_block, spatial_size, hist_bins):
 
+#    print('in find_cars :', 'ystart: ', ystart, 'spatial_size: ', spatial_size)
+
     # array of rectangles where cars were detected
     rectangles = []
     draw_img = np.copy(img)
+# https://discussions.udacity.com/t/accuracy-of-svm-is-99-on-test-test-but-not-detecting-a-single-car-in-test-images/237614/5
+# Uncomment the following line if you extracted training
+# data from .png images (scaled 0 to 1 by mpimg) and the
+# image you are searching is a .jpg (scaled 0 to 255)
     img = img.astype(np.float32)/255
 
     img_tosearch = img[ystart:ystop,:,:]
