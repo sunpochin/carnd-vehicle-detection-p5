@@ -50,6 +50,9 @@ hist_feat = params.hist_feat # Histogram features on or off
 hog_feat = params.hog_feat # HOG features on or off
 y_start_stop = params.y_start_stop # Min and max in y to search in slide_window()
 
+# sample_size = 4000
+sample_size = params.sample_size
+
 
 # Define a function to extract features from a single image window
 # This function is very similar to extract_features()
@@ -313,17 +316,19 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
     return imcopy
 
 
-import numpy as np
-import cv2
-from skimage.feature import hog
 
-def convert_color(img, conv='RGB2YCrCb'):
-    if conv == 'RGB2YCrCb':
+# def convert_color(img, conv='RGB2YCrCb'):
+def convert_color(img, convto='YCrCb'): # conv='RGB2YCrCb'
+    if 'YCrCb' == convto:
         return cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
-    if conv == 'BGR2YCrCb':
-        return cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-    if conv == 'RGB2LUV':
+    if 'LUV' == convto:
         return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
+    # if conv == 'RGB2YCrCb':
+    #     return cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
+    # if conv == 'BGR2YCrCb':
+    #     return cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+    # if conv == 'RGB2LUV':
+    #     return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
 
 def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                         vis=False, feature_vec=True):
@@ -344,23 +349,6 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                        visualise=vis, feature_vector=feature_vec)
         return features
 
-# # # the code in 28. Color Classify
-# # # https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/2b62a1c3-e151-4a0e-b6b6-e424fa46ceab/lessons/fd66c083-4ccb-4fe3-bda1-c29db76f50a0/concepts/be308636-742b-416a-8fcc-c6071865a11f
-# def bin_spatial(img, size=(32, 32)):
-#     color1 = cv2.resize(img[:,:,0], size).ravel()
-#     color2 = cv2.resize(img[:,:,1], size).ravel()
-#     color3 = cv2.resize(img[:,:,2], size).ravel()
-#     return np.hstack((color1, color2, color3))
-#
-# def color_hist(img, nbins=32):    #bins_range=(0, 256)
-#     # Compute the histogram of the color channels separately
-#     channel1_hist = np.histogram(img[:,:,0], bins=nbins)
-#     channel2_hist = np.histogram(img[:,:,1], bins=nbins)
-#     channel3_hist = np.histogram(img[:,:,2], bins=nbins)
-#     # Concatenate the histograms into a single feature vector
-#     hist_features = np.concatenate((channel1_hist[0], channel2_hist[0], channel3_hist[0]))
-#     # Return the individual histograms, bin_centers and feature vector
-#     return hist_features
 
 def train_classifier():
     start_time = time.time()
@@ -401,7 +389,7 @@ def train_classifier():
     # Reduce the sample size because
     # The quiz evaluator times out after 13s of CPU time
     # if 1 == debug:
-    sample_size = 4000
+    # sample_size = 4000
     cars = cars[0:sample_size]
     notcars = notcars[0:sample_size]
 
@@ -493,7 +481,8 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
     img = img.astype(np.float32)/255
 
     img_tosearch = img[ystart:ystop,:,:]
-    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2YCrCb')
+#    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2YCrCb')
+    ctrans_tosearch = convert_color(img_tosearch, convto=color_space)
     if scale != 1:
         imshape = ctrans_tosearch.shape
         ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1]/scale), np.int(imshape[0]/scale)))

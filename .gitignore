@@ -2,3 +2,4 @@
 *.pyc
 test_videos_output/
 training_set
+save*
