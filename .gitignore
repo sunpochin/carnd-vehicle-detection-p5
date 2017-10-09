@@ -2,4 +2,11 @@
 *.pyc
 test_videos_output/
 training_set
+<<<<<<< HEAD
 save*
+=======
+save
+.ipynb_checkpoints/
+
+
+>>>>>>> master
