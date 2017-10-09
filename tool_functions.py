@@ -1,3 +1,16 @@
+# Todo list:
+# 1. implement find parameters function.
+# https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/2b62a1c3-e151-4a0e-b6b6-e424fa46ceab/lessons/fd66c083-4ccb-4fe3-bda1-c29db76f50a0/concepts/1a96426f-9ea1-4ca0-bb41-9b2bafbaea3e
+# Parameter Tuning in Scikit-learn
+# Scikit-learn includes two algorithms for carrying out an automatic parameter search:
+#
+# GridSearchCV
+# RandomizedSearchCV
+
+# 2. use opencv HOG. It's faster.
+
+
+
 import matplotlib.image as mpimg
 import numpy as np
 import cv2
@@ -382,14 +395,17 @@ def train_classifier():
             notcars.append(image)
 
 
+    print('cars size : ', len(cars))
+    print('notcars size : ', len(notcars))
     # todo: remove this!!!!!!!
     # Reduce the sample size because
     # The quiz evaluator times out after 13s of CPU time
     # if 1 == debug:
-    sample_size = 2000
+    sample_size = 4000
     cars = cars[0:sample_size]
     notcars = notcars[0:sample_size]
 
+    print('after sampled: ')
     print('cars size : ', len(cars))
     print('notcars size : ', len(notcars))
 

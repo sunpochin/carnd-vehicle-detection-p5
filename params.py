@@ -1,11 +1,12 @@
 ### TODO: Tweak these parameters and see how the results change.
 #color_space = 'RGB' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-#color_space = 'HSV'
-color_space = 'HLS'
+color_space = 'HSV'
+#color_space = 'HLS'
+color_space = 'YCrCb'
 orient = 9  # HOG orientations
-#pix_per_cell = 8 # HOG pixels per cell
+pix_per_cell = 8 # HOG pixels per cell
 # making it 4 to have more rect in find_cars
-pix_per_cell = 4 # HOG pixels per cell
+#pix_per_cell = 4 # HOG pixels per cell
 
 cell_per_block = 2 # HOG cells per block
 
