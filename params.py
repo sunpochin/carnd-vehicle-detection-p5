@@ -1,10 +1,6 @@
 ### TODO: Tweak these parameters and see how the results change.
 #color_space = 'RGB' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-<<<<<<< HEAD
 # color_space = 'HSV'
-=======
-#color_space = 'HSV'
->>>>>>> master
 #color_space = 'HLS'
 #color_space = 'YCrCb'
 color_space = 'LUV'
@@ -25,10 +21,7 @@ spatial_feat = True # Spatial features on or off
 hist_feat = True # Histogram features on or off
 hog_feat = True # HOG features on or off
 y_start_stop = [None, None] # Min and max in y to search in slide_window()
-<<<<<<< HEAD
 sample_size = 4000
-=======
 
 xy_window=(64, 64)
 xy_overlap=(0.8, 0.8)
->>>>>>> master
