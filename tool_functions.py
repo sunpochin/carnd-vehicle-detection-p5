@@ -504,7 +504,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
 #    cells_per_step = 1  # Instead of overlap, define how many cells to step
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step
-    print('nblocks_per_window : ', nblocks_per_window, ' nxsteps : ', nxsteps, ' nysteps : ', nysteps)
+    # print('nblocks_per_window : ', nblocks_per_window, ' nxsteps : ', nxsteps, ' nysteps : ', nysteps)
 
 
 #     # Compute individual channel HOG features for the entire image
@@ -601,33 +601,53 @@ def draw_labeled_bboxes(img, labels):
     # Return the image
     return img
 
-# heatmap_depth = 10
-# heatmaps = None
-# heatmaps = np.zeros((heatmap_depth,  img.shape[0], img.shape[1] ) ).astype(np.float)
-# def makeheatmap(img, rect, heatmap_threshold, debug = False):
-#     heat = np.zeros_like(img[:,:,0]).astype(np.float)
-#     print('heat.shape : ', heat.shape)
-#     global heatmaps
-#     heatmaps = heatmap + heat
-#
-#     print('heatmaps.shape : ', heatmaps.shape)
-#     heat = add_heat(heat, rect, debug)
-#
-#     heat = apply_threshold(heat, heatmap_threshold)
-#     # if debug:
-#     #     print('heat : ', heat)
-#     labels = label(heat)
-#     if debug:
-#         print(labels[1], 'cars found')
-# #         print('labels: ', labels[0])
-# #         plt.imshow(labels[0], cmap='gray')
-#     # Visualize the heatmap when displaying
-#     heatmap = np.clip(heat, 0, 255)
-#
-#     # Draw bounding boxes on a copy of the image
-#     draw_img = draw_labeled_bboxes(np.copy(img), labels)
-#
-#     if debug:
+
+import collections
+heatmap_depth = 30
+heatmaps = collections.deque(maxlen=heatmap_depth)
+# heatmap_threshold = 1.8
+#heatmap_threshold = 5
+#heatmap_threshold = 0.1
+heatmap_threshold = 0.7
+
+def makeheatmap(img, rect, heatmap_threshold, debug = False):
+    heat = np.zeros_like(img[:,:,0]).astype(np.float)
+#     print('heatmaps : ', heatmaps)
+    heat = add_heat(heat, rect, debug)
+    heatmaps.append(heat)
+    heatmap_sum = sum(heatmaps)
+#     print('heatmap_sum : ', heatmap_sum)
+#     print('heatmap_sum.shape : ', heatmap_sum.shape)
+
+    average = heatmap_sum / len(heatmaps)
+    if debug:
+        print('numpy.where( average > heatmap_threshold ) :',
+            np.where( average > heatmap_threshold), ' \n ' ,
+            average[np.where( average > heatmap_threshold) ] )
+    thresholded = apply_threshold(average, heatmap_threshold)
+    labels = label(average)
+
+#     print('numpy.where( heatmap_sum > heatmap_threshold ) :',
+#         np.where( heatmap_sum > heatmap_threshold), ' \n ' ,
+#         heatmap_sum[np.where( heatmap_sum > heatmap_threshold) ] )
+#     thresholded = apply_threshold(heatmap_sum, heatmap_threshold)
+#     labels = label(thresholded)
+#     print('numpy.where( thresholded > heatmap_threshold ) :', np.where( thresholded > heatmap_threshold), ' \n ',
+#         thresholded[np.where( thresholded > heatmap_threshold) ] )
+
+    if debug:
+        print(labels[1], 'cars found')
+#         print('labels: ', labels[0])
+#         plt.imshow(labels[0], cmap='gray')
+    # Visualize the heatmap when displaying
+#    heatmap = np.clip(heat, 0, 255)
+    heatmap = np.clip(thresholded, 0, 255)
+
+
+    # Draw bounding boxes on a copy of the image
+    draw_img = draw_labeled_bboxes(np.copy(img), labels)
+
+    if debug:
 #         # Display the image
 # #         plt.imshow(draw_img)
 #         fig = plt.figure()
@@ -639,5 +659,9 @@ def draw_labeled_bboxes(img, labels):
 #         plt.title('Heat Map')
 #         fig.tight_layout()
 #         plt.show()
-#
-#     return draw_img
+        plt.imshow(draw_img)
+        plt.show()
+        plt.imshow(heatmap, cmap='hot')
+        plt.show()
+
+    return draw_img
