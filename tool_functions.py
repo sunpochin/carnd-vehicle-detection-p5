@@ -8,6 +8,15 @@
 # RandomizedSearchCV
 
 # 2. use opencv HOG. It's faster.
+import collections
+heatmap_depth = 30
+heatmaps = collections.deque(maxlen=heatmap_depth)
+# heatmap_threshold = 1.8
+#heatmap_threshold = 5
+#heatmap_threshold = 0.1
+#heatmap_threshold = 0.7
+heatmap_threshold = 1.0
+
 
 import matplotlib.image as mpimg
 import numpy as np
@@ -501,7 +510,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
 #     sample_window_cnt = 128
     nblocks_per_window = (sample_window_cnt // pix_per_cell) - cell_per_block + 1
     cells_per_step = 2  # Instead of overlap, define how many cells to step
-#    cells_per_step = 1  # Instead of overlap, define how many cells to step
+    cells_per_step = 1  # Instead of overlap, define how many cells to step
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step
     # print('nblocks_per_window : ', nblocks_per_window, ' nxsteps : ', nxsteps, ' nysteps : ', nysteps)
@@ -601,14 +610,6 @@ def draw_labeled_bboxes(img, labels):
     # Return the image
     return img
 
-
-import collections
-heatmap_depth = 30
-heatmaps = collections.deque(maxlen=heatmap_depth)
-# heatmap_threshold = 1.8
-#heatmap_threshold = 5
-#heatmap_threshold = 0.1
-heatmap_threshold = 0.7
 
 def makeheatmap(img, rect, heatmap_threshold, debug = False):
     heat = np.zeros_like(img[:,:,0]).astype(np.float)
