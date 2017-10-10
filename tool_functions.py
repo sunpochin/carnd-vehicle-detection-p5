@@ -9,7 +9,6 @@
 
 # 2. use opencv HOG. It's faster.
 
-
 import matplotlib.image as mpimg
 import numpy as np
 import cv2
@@ -321,6 +320,8 @@ def convert_color(img, convto='YCrCb'): # conv='RGB2YCrCb'
         return cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
     if 'LUV' == convto:
         return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
+    if 'YUV' == convto:
+        return cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
     # if conv == 'RGB2YCrCb':
     #     return cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
     # if conv == 'BGR2YCrCb':
@@ -500,7 +501,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
 #     sample_window_cnt = 128
     nblocks_per_window = (sample_window_cnt // pix_per_cell) - cell_per_block + 1
     cells_per_step = 2  # Instead of overlap, define how many cells to step
-    cells_per_step = 1  # Instead of overlap, define how many cells to step
+#    cells_per_step = 1  # Instead of overlap, define how many cells to step
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step
     print('nblocks_per_window : ', nblocks_per_window, ' nxsteps : ', nxsteps, ' nysteps : ', nysteps)
@@ -600,36 +601,43 @@ def draw_labeled_bboxes(img, labels):
     # Return the image
     return img
 
-
-def makeheatmap(img, rect, heatmap_threshold, debug = False):
-    heat = np.zeros_like(img[:,:,0]).astype(np.float)
-    heat = add_heat(heat, rect, debug)
-
-    heat = apply_threshold(heat, heatmap_threshold)
-    # if debug:
-    #     print('heat : ', heat)
-    labels = label(heat)
-    if debug:
-        print(labels[1], 'cars found')
-#         print('labels: ', labels[0])
-#         plt.imshow(labels[0], cmap='gray')
-    # Visualize the heatmap when displaying
-    heatmap = np.clip(heat, 0, 255)
-
-    # Draw bounding boxes on a copy of the image
-    draw_img = draw_labeled_bboxes(np.copy(img), labels)
-
-    if debug:
-        # Display the image
+# heatmap_depth = 10
+# heatmaps = None
+# heatmaps = np.zeros((heatmap_depth,  img.shape[0], img.shape[1] ) ).astype(np.float)
+# def makeheatmap(img, rect, heatmap_threshold, debug = False):
+#     heat = np.zeros_like(img[:,:,0]).astype(np.float)
+#     print('heat.shape : ', heat.shape)
+#     global heatmaps
+#     heatmaps = heatmap + heat
+#
+#     print('heatmaps.shape : ', heatmaps.shape)
+#     heat = add_heat(heat, rect, debug)
+#
+#     heat = apply_threshold(heat, heatmap_threshold)
+#     # if debug:
+#     #     print('heat : ', heat)
+#     labels = label(heat)
+#     if debug:
+#         print(labels[1], 'cars found')
+# #         print('labels: ', labels[0])
+# #         plt.imshow(labels[0], cmap='gray')
+#     # Visualize the heatmap when displaying
+#     heatmap = np.clip(heat, 0, 255)
+#
+#     # Draw bounding boxes on a copy of the image
+#     draw_img = draw_labeled_bboxes(np.copy(img), labels)
+#
+#     if debug:
+#         # Display the image
+# #         plt.imshow(draw_img)
+#         fig = plt.figure()
+#         plt.subplot(121)
 #         plt.imshow(draw_img)
-        fig = plt.figure()
-        plt.subplot(121)
-        plt.imshow(draw_img)
-        plt.title('Car Positions')
-        plt.subplot(122)
-        plt.imshow(heatmap, cmap='hot')
-        plt.title('Heat Map')
-        fig.tight_layout()
-        plt.show()
-
-    return draw_img
+#         plt.title('Car Positions')
+#         plt.subplot(122)
+#         plt.imshow(heatmap, cmap='hot')
+#         plt.title('Heat Map')
+#         fig.tight_layout()
+#         plt.show()
+#
+#     return draw_img
