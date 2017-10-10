@@ -10,7 +10,6 @@
 # 2. use opencv HOG. It's faster.
 
 
-
 import matplotlib.image as mpimg
 import numpy as np
 import cv2
@@ -24,7 +23,7 @@ from skimage.feature import hog
 import pickle
 import time
 from scipy.ndimage.measurements import label
-
+import multiprocessing
 # start_time = time.time()
 
 # NOTE: the next import is only valid for scikit-learn version <= 0.17
@@ -52,9 +51,7 @@ hist_feat = params.hist_feat # Histogram features on or off
 hog_feat = params.hog_feat # HOG features on or off
 y_start_stop = params.y_start_stop # Min and max in y to search in slide_window()
 
-# sample_size = 4000
 sample_size = params.sample_size
-#sample_size = 10000
 
 
 # Define a function to extract features from a single image window
@@ -195,7 +192,6 @@ def color_hist(img, nbins=32, bins_range=(0, 256)):
 def extract_features(imgs, color_space='RGB', orient=9, spatial_size=(32, 32), hist_bins=32,
                      pix_per_cell=8, cell_per_block=2, hog_channel='ALL',
                      bin_feature='Enabled',color_feature='Enabled'):
-    import matplotlib.image as mpimg
 
     features = []
     m_features=[]
@@ -301,7 +297,6 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
 # # https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/2b62a1c3-e151-4a0e-b6b6-e424fa46ceab/lessons/fd66c083-4ccb-4fe3-bda1-c29db76f50a0/concepts/8e39c07e-afd5-4ba5-9204-8b44aa39285c
 # Define a function to draw bounding boxes
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
-    import params
     print('in draw_boxes' )
     ### TODO: Tweak these parameters and see how the results change.
     # HOG orientations
@@ -505,19 +500,34 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
 #     sample_window_cnt = 128
     nblocks_per_window = (sample_window_cnt // pix_per_cell) - cell_per_block + 1
     cells_per_step = 2  # Instead of overlap, define how many cells to step
+    cells_per_step = 1  # Instead of overlap, define how many cells to step
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step
     print('nblocks_per_window : ', nblocks_per_window, ' nxsteps : ', nxsteps, ' nysteps : ', nysteps)
+
+
+#     # Compute individual channel HOG features for the entire image
+#     p = multiprocessing.Pool(12)
+#     channel_list = [[ch1, orient, pix_per_cell, cell_per_block],
+#         [ch2, orient, pix_per_cell, cell_per_block],
+#         [ch3, orient, pix_per_cell, cell_per_block] ]
+# #    channel_list = [ch1, ch2, ch3]
+#     hog1, hog2, hog3 = p.starmap(get_hog_features, channel_list)
+#     # hog1, hog2, hog3 = p.starmap(get_hog_features, (channel_list, orient, pix_per_cell, cell_per_block))
+#     # hog1, hog2, hog3 = p.starmap(get_hog_features, channel_list, orient, pix_per_cell, cell_per_block)
+
     # Compute individual channel HOG features for the entire image
     hog1 = get_hog_features(ch1, orient, pix_per_cell, cell_per_block, feature_vec=False)
     hog2 = get_hog_features(ch2, orient, pix_per_cell, cell_per_block, feature_vec=False)
     hog3 = get_hog_features(ch3, orient, pix_per_cell, cell_per_block, feature_vec=False)
+    # print('hog2.shape : ', hog2.shape)
 
     for xb in range(nxsteps):
         for yb in range(nysteps):
             ypos = yb*cells_per_step
             xpos = xb*cells_per_step
             # Extract HOG for this patch
+            # print(' ypos : ', ypos , ' nblocks_per_window : ', nblocks_per_window)
             hog_feat1 = hog1[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel()
             hog_feat2 = hog2[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel()
             hog_feat3 = hog3[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel()
@@ -542,7 +552,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
                 xbox_left = np.int(xleft*scale)
                 ytop_draw = np.int(ytop*scale)
                 win_draw = np.int(sample_window_cnt*scale)
-                print(' xbox_left : ', xbox_left, ' ytop_draw : ', ytop_draw, ' win_draw : ', win_draw)
+                # print(' xbox_left : ', xbox_left, ' ytop_draw : ', ytop_draw, ' win_draw : ', win_draw)
                 cv2.rectangle(draw_img,(xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart),(0,0,255),6)
                 rectangles.append(((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart)))
 
@@ -556,7 +566,13 @@ def add_heat(heatmap, bbox_list, debug = False):
     for box in bbox_list:
         # Add += 1 for all pixels inside each bbox
         # Assuming each "box" takes the form ((x1, y1), (x2, y2))
+        heat_cor1 = box[0][1]
+        heat_cor2 = box[1][1]
+        heat_cor3 = box[0][0]
+        heat_cor4 = box[1][0]
         heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
+        # if debug:
+        #     print(' heat_cor1 : ', heat_cor1, ' heat_cor2 : ',heat_cor2, ' heat_cor3 : ',heat_cor3, ' heat_cor4 : ',heat_cor4)
 
     # Return updated heatmap
     return heatmap
@@ -580,7 +596,7 @@ def draw_labeled_bboxes(img, labels):
         # Define a bounding box based on min/max x and y
         bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
         # Draw the box on the image
-        cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+        cv2.rectangle(img, bbox[0], bbox[1], (255, 0, 0), 6)
     # Return the image
     return img
 
@@ -590,12 +606,13 @@ def makeheatmap(img, rect, heatmap_threshold, debug = False):
     heat = add_heat(heat, rect, debug)
 
     heat = apply_threshold(heat, heatmap_threshold)
+    # if debug:
+    #     print('heat : ', heat)
     labels = label(heat)
     if debug:
         print(labels[1], 'cars found')
 #         print('labels: ', labels[0])
 #         plt.imshow(labels[0], cmap='gray')
-
     # Visualize the heatmap when displaying
     heatmap = np.clip(heat, 0, 255)
 
