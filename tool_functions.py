@@ -11,12 +11,6 @@
 import collections
 heatmap_depth = 30
 heatmaps = collections.deque(maxlen=heatmap_depth)
-# heatmap_threshold = 1.8
-#heatmap_threshold = 5
-#heatmap_threshold = 0.1
-#heatmap_threshold = 0.7
-heatmap_threshold = 1.0
-
 
 import matplotlib.image as mpimg
 import numpy as np
@@ -60,7 +54,7 @@ hog_feat = params.hog_feat # HOG features on or off
 y_start_stop = params.y_start_stop # Min and max in y to search in slide_window()
 
 sample_size = params.sample_size
-
+heatmap_threshold = params.heatmap_threshold
 
 # Define a function to extract features from a single image window
 # This function is very similar to extract_features()

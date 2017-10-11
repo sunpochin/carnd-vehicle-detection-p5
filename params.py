@@ -10,12 +10,11 @@
 # maybe this is faster?
 # https://discussions.udacity.com/t/good-tips-from-my-reviewer-for-this-vehicle-detection-project/232903
 color_space = 'YUV'
-orient = 11  # HOG orientations
+orient = 9  # HOG orientations
 pix_per_cell = 16 # HOG pixels per cell
 
 # making it 4 to have more rect in find_cars
 #pix_per_cell = 4 # HOG pixels per cell
-
 
 cell_per_block = 2 # HOG cells per block
 
@@ -31,3 +30,13 @@ hist_feat = True # Histogram features on or off
 hog_feat = True # HOG features on or off
 y_start_stop = [None, None] # Min and max in y to search in slide_window()
 sample_size = 10000
+
+# heatmap_threshold = 1.8
+#heatmap_threshold = 5
+#heatmap_threshold = 0.1
+#heatmap_threshold = 0.7
+#heatmap_threshold = 1.0
+
+heatmap_threshold = 1.6
+heatmap_threshold = 2.1
+heatmap_threshold = 1.6
