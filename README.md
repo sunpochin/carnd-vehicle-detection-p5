@@ -22,6 +22,18 @@ The goals / steps of this project are the following:
 [image7]: ./examples/output_bboxes.png
 [video1]: ./project_video.mp4
 
+[image11]: ./eda/cars/image0047.png
+[image12]: ./eda/noncars/image15.png
+
+[image14]: ./eda/car-image-0040.png
+[image15]: ./eda/car-image-0040-hog.png
+[image16]: ./eda/car-image-0040-YUV.png
+
+[image18]: ./eda/noncars-16.png
+[image19]: ./eda/noncars-16-hog.png
+
+
+
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
 ### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
 
@@ -36,18 +48,38 @@ You're reading it!
 
 #### 1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in the first code cell of the IPython notebook (or in lines # through # of the file called `some_file.py`).  
-
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
-![alt text][image1]
+Image of a vehicle: ![alt text][image11]
+
+Image of non-vehicle: ![alt text][image12]
 
 I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 
-Here is an example using the `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
+Here is an example using the `YUV` color space and HOG parameters of `orientations=9`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
+Vehicle image:
 
-![alt text][image2]
+![alt text][image14]
+
+Y channel of YUV color space:
+
+![alt text][image16]
+
+HOG of Y channel:
+
+![alt text][image15]
+
+non-vehicle image:
+![alt text][image18]
+
+HOG of non-vehicle image:
+
+![alt text][image19]
+
+The code used HOG is contained in `def loadimageandfeatures()` of the file `tool_functions.py`,
+`def train_classifier():`
+`Decide if need to train a classifier or just load from previous model`
 
 #### 2. Explain how you settled on your final choice of HOG parameters.
 

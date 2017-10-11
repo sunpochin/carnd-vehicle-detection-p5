@@ -351,9 +351,7 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                        visualise=vis, feature_vector=feature_vec)
         return features
 
-
-def train_classifier():
-    start_time = time.time()
+def loadimageandfeatures():
     # todo: remove this!!!!!!!
     debug = 0
     # Read in car and non-car images
@@ -387,21 +385,14 @@ def train_classifier():
 
     print('cars size : ', len(cars))
     print('notcars size : ', len(notcars))
-    # todo: remove this!!!!!!!
     # Reduce the sample size because
-    # The quiz evaluator times out after 13s of CPU time
     # if 1 == debug:
     # sample_size = 4000
     cars = cars[0:sample_size]
     notcars = notcars[0:sample_size]
-
     print('after sampled: ')
     print('cars size : ', len(cars))
     print('notcars size : ', len(notcars))
-
-    elapsed_time = time.time() - start_time
-    print('elapsed_time : ', elapsed_time )
-
 
     car_features = extract_features(cars, color_space=color_space,
                             spatial_size=spatial_size, hist_bins=hist_bins,
@@ -410,7 +401,6 @@ def train_classifier():
                             hog_channel=hog_channel
     #                                , spatial_feat=spatial_feat, hist_feat=hist_feat, hog_feat=hog_feat
                                    )
-
     notcar_features = extract_features(notcars, color_space=color_space,
                             spatial_size=spatial_size, hist_bins=hist_bins,
                             orient=orient, pix_per_cell=pix_per_cell,
@@ -418,7 +408,14 @@ def train_classifier():
                             hog_channel=hog_channel
     #                                   , spatial_feat=spatial_feat, hist_feat=hist_feat, hog_feat=hog_feat
                                       )
+
     print('car_features shape:, ', len(car_features) )
+    return car_features, notcar_features
+
+# get HOG features and train a classifier
+def train_classifier():
+    start_time = time.time()
+    car_features, notcar_features = loadimageandfeatures()
 
     X = np.vstack((car_features, notcar_features)).astype(np.float64)
     # Fit a per-column scaler
@@ -428,17 +425,15 @@ def train_classifier():
     scaled_X = X_scaler.transform(X)
 
     print('X:, ', X.shape, ' X_scaler: ', X_scaler)
-
     # Define the labels vector
     y = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
-
 
     # Split up data into randomized training and test sets
     rand_state = np.random.randint(0, 100)
     X_train, X_test, y_train, y_test = train_test_split(
         scaled_X, y, test_size=0.2, random_state=rand_state)
 
-    print('Using:',orient,'orientations',pix_per_cell,
+    print('Using: ',orient,' orientations',pix_per_cell,
         'pixels per cell and', cell_per_block,'cells per block')
     print('Feature vector length:', len(X_train[0]))
     # Use a linear SVC
@@ -453,6 +448,7 @@ def train_classifier():
     # Check the prediction time for a single sample
     t=time.time()
 
+    # after trainingm save the classifier and scaler
     with open('save/clf.pickle', 'wb') as f:
         pickle.dump(svc, f)
     with open('save/x_scaler.pickle', 'wb') as f:
