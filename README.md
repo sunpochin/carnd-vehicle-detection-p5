@@ -22,15 +22,13 @@ The goals / steps of this project are the following:
 [image7]: ./examples/output_bboxes.png
 [video1]: ./project_video.mp4
 
-[image11]: ./eda/cars/image0047.png
+[image11]: ./eda/vehicle-and-non.png
+
 [image12]: ./eda/noncars/image15.png
 
 [image14]: ./eda/car-image-0040.png
-[image15]: ./eda/car-image-0040-hog.png
-[image16]: ./eda/car-image-0040-YUV.png
 
-[image18]: ./eda/noncars-16.png
-[image19]: ./eda/noncars-16-hog.png
+[image16]: ./eda/noncars-16.png
 
 
 
@@ -50,40 +48,33 @@ You're reading it!
 
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
-Image of a vehicle: ![alt text][image11]
+Images of vehicle and non-vehicle: ![alt text][image11]
 
-Image of non-vehicle: ![alt text][image12]
 
 I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 
 Here is an example using the `YUV` color space and HOG parameters of `orientations=9`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
-Vehicle image:
+Vehicle image, image in YUV color space, HOG:
 
 ![alt text][image14]
 
-Y channel of YUV color space:
+non-vehicle image, image in YUV color space, HOG:
 
 ![alt text][image16]
-
-HOG of Y channel:
-
-![alt text][image15]
-
-non-vehicle image:
-![alt text][image18]
-
-HOG of non-vehicle image:
-
-![alt text][image19]
 
 The code used HOG is contained in `def loadimageandfeatures()` of the file `tool_functions.py`,
 `def train_classifier():`
 `Decide if need to train a classifier or just load from previous model`
 
+## todo separator ##
+
 #### 2. Explain how you settled on your final choice of HOG parameters.
 
-I tried various combinations of parameters and...
+I started a pipeline with the parameters in the lectures: color_space = grayscale, pix_per_cell = 8, cell_per_block = 2, orient = 9.
+Then I experimented with different color_space, 'HSV' and 'HLS' doesn't seem to work, while 'YCrCb' was able to produce a working but wobbly result:
+ https://www.youtube.com/watch?v=Q98r-bd85Zw&feature=youtu.be&t=7s
+
 
 #### 3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
