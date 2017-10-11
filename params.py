@@ -31,12 +31,16 @@ hog_feat = True # HOG features on or off
 y_start_stop = [None, None] # Min and max in y to search in slide_window()
 sample_size = 10000
 
+# The area of sliding window search, in def findcars.
+ystart = 350
+ystop = 656
+scale = 1.5
+
 # heatmap_threshold = 1.8
 #heatmap_threshold = 5
 #heatmap_threshold = 0.1
 #heatmap_threshold = 0.7
 #heatmap_threshold = 1.0
-
-heatmap_threshold = 1.6
-heatmap_threshold = 2.1
+#heatmap_threshold = 1.6
+#heatmap_threshold = 2.1
 heatmap_threshold = 1.6

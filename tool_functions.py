@@ -194,14 +194,11 @@ def color_hist(img, nbins=32, bins_range=(0, 256)):
 def extract_features(imgs, color_space='RGB', orient=9, spatial_size=(32, 32), hist_bins=32,
                      pix_per_cell=8, cell_per_block=2, hog_channel='ALL',
                      bin_feature='Enabled',color_feature='Enabled'):
-
     features = []
     m_features=[]
 
     for file in imgs:
-
         image = mpimg.imread(file)
-
         if color_space != 'RGB':
             if color_space == 'HSV':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
@@ -467,16 +464,18 @@ def train_classifier():
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
               pix_per_cell, cell_per_block, spatial_size, hist_bins, sample_window_cnt):
 
-#    print('in find_cars :', 'ystart: ', ystart, 'spatial_size: ', spatial_size)
+
+    #    print('in find_cars :', 'ystart: ', ystart, 'spatial_size: ', spatial_size)
     # array of rectangles where cars were detected
     rectangles = []
     draw_img = np.copy(img)
-# https://discussions.udacity.com/t/accuracy-of-svm-is-99-on-test-test-but-not-detecting-a-single-car-in-test-images/237614/5
-# Uncomment the following line if you extracted training
-# data from .png images (scaled 0 to 1 by mpimg) and the
-# image you are searching is a .jpg (scaled 0 to 255)
+    # https://discussions.udacity.com/t/accuracy-of-svm-is-99-on-test-test-but-not-detecting-a-single-car-in-test-images/237614/5
+    # Uncomment the following line if you extracted training
+    # data from .png images (scaled 0 to 1 by mpimg) and the
+    # image you are searching is a .jpg (scaled 0 to 255)
     img = img.astype(np.float32)/255
 
+    # only need to search the lower part of image because cars normally don't fly.
     img_tosearch = img[ystart:ystop,:,:]
     ctrans_tosearch = convert_color(img_tosearch, convto = color_space)
     if scale != 1:
@@ -499,22 +498,11 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
 # #    sample_window_cnt = 64
 #     sample_window_cnt = 128
     nblocks_per_window = (sample_window_cnt // pix_per_cell) - cell_per_block + 1
-    cells_per_step = 2  # Instead of overlap, define how many cells to step
+#    cells_per_step = 2  # Instead of overlap, define how many cells to step
     cells_per_step = 1  # Instead of overlap, define how many cells to step
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step
     # print('nblocks_per_window : ', nblocks_per_window, ' nxsteps : ', nxsteps, ' nysteps : ', nysteps)
-
-
-#     # Compute individual channel HOG features for the entire image
-#     p = multiprocessing.Pool(12)
-#     channel_list = [[ch1, orient, pix_per_cell, cell_per_block],
-#         [ch2, orient, pix_per_cell, cell_per_block],
-#         [ch3, orient, pix_per_cell, cell_per_block] ]
-# #    channel_list = [ch1, ch2, ch3]
-#     hog1, hog2, hog3 = p.starmap(get_hog_features, channel_list)
-#     # hog1, hog2, hog3 = p.starmap(get_hog_features, (channel_list, orient, pix_per_cell, cell_per_block))
-#     # hog1, hog2, hog3 = p.starmap(get_hog_features, channel_list, orient, pix_per_cell, cell_per_block)
 
     # Compute individual channel HOG features for the entire image
     hog1 = get_hog_features(ch1, orient, pix_per_cell, cell_per_block, feature_vec=False)
@@ -536,8 +524,9 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient,
             xleft = xpos*pix_per_cell
             ytop = ypos*pix_per_cell
 
-            # Extract the image patch
-            subimg = cv2.resize(ctrans_tosearch[ytop:ytop + sample_window_cnt, xleft:xleft + sample_window_cnt], (64,64))
+            # Extract the image patch, 64 x 64 is the shape of training set images.
+            subimg = cv2.resize(ctrans_tosearch[ytop:ytop + sample_window_cnt, xleft:xleft + sample_window_cnt],
+                (64,64))
 
             # Get color features
             spatial_features = bin_spatial(subimg, size=spatial_size)
@@ -600,7 +589,7 @@ def draw_labeled_bboxes(img, labels):
     # Return the image
     return img
 
-
+# create heatmap , sum them, and average them to get rid of false positives.
 def makeheatmap(img, rect, heatmap_threshold, debug = False):
     heat = np.zeros_like(img[:,:,0]).astype(np.float)
 #     print('heatmaps : ', heatmaps)
@@ -634,7 +623,6 @@ def makeheatmap(img, rect, heatmap_threshold, debug = False):
 #    heatmap = np.clip(heat, 0, 255)
     heatmap = np.clip(thresholded, 0, 255)
 
-
     # Draw bounding boxes on a copy of the image
     draw_img = draw_labeled_bboxes(np.copy(img), labels)
 
@@ -650,8 +638,10 @@ def makeheatmap(img, rect, heatmap_threshold, debug = False):
 #         plt.title('Heat Map')
 #         fig.tight_layout()
 #         plt.show()
+        plt.figure(figsize=(16, 16))
         plt.imshow(draw_img)
         plt.show()
+        plt.figure(figsize=(16, 16))
         plt.imshow(heatmap, cmap='hot')
         plt.show()
 
