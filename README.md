@@ -13,15 +13,6 @@ The goals / steps of this project are the following:
 * Estimate a bounding box for vehicles detected.
 
 [//]: # (Image References)
-[image1]: ./examples/car_not_car.png
-[image2]: ./examples/HOG_example.jpg
-[image3]: ./examples/sliding_windows.jpg
-[image4]: ./examples/sliding_window.jpg
-[image5]: ./examples/bboxes_and_heat.png
-[image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
-[video1]: ./project_video.mp4
-
 [image11]: ./eda/vehicle-and-non.png
 
 [image12]: ./eda/noncars/image15.png
@@ -117,7 +108,9 @@ Here's a [link to my video result](https://www.youtube.com/watch?v=CY7TenfbOJg)
 #### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
 
-To filter false positive, I used a deque to record 30 heatmaps, sum them and average them, them apply a threshold to identify real vehicle positions. The codes are in `makeheatmap()` .
+To filter false positive, I used a deque to record 30 heatmaps, sum them and average them, them apply a threshold to identify real vehicle positions. The codes are in `makeheatmap()` of `tool_functions.py`.
+
+Here are some heatmap images:
 ![alt text][image21]
 ![alt text][image22]
 ![alt text][image23]
@@ -129,4 +122,5 @@ To filter false positive, I used a deque to record 30 heatmaps, sum them and ave
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+* When training the classifier, issue of memory exhaustion may happen. I tried to solve it with an AWS instance but it's not convenient to use.
+* Speed of processing the whole project video may be slow, and slow iteration is bad for experimenting with parameters. I tried to multiprocessing HOG calculations but failed.
